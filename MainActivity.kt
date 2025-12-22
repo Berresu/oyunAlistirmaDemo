@@ -1,33 +1,40 @@
-package com.example.lkuygulamam
+package com.example.ilkuygulamam
 
-import android.content.Context
 import android.os.Bundle
-import android.view.View
-import android.widget.Button
-import android.widget.ImageView
-import android.widget.TextView
-import android.widget.Toast
-import androidx.appcompat.app.AppCompatActivity
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 
-class MainActivity : AppCompatActivity() {
-    private val OYUN_SONU_IDLERI = setOf(
-        "sonuc_iyi",
-        "sonuc_kotu",
-        "tehdit_sonucu",
-        "karsilastirma"
-    )
+class MainActivity : ComponentActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContent {
+            MaterialTheme {
+                Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
+                    OyunEkrani()
+                }
+            }
+        }
+    }
+}
 
-    private val PREFS_NAME = "KapiciHikayesiPrefs"
-    private val KEY_KANIT_BULUNDU = "KanitBulundu_"
-    private val KEY_DIYALOG_ID = "DiyalogDurumId"
+@Composable
+fun OyunEkrani() {
+    var mevcutDurumId by remember { mutableStateOf("baslangic") }
+    var kanitBulundu by remember { mutableStateOf(false) }
 
-    private var mevcutDurumId: String = "baslangic"
-
-    private lateinit var diyaloqKutusu: TextView
-    private lateinit var secenek1Button: Button
-    private lateinit var secenek2Button: Button
-
-    private val diyalogHaritasi = mapOf(
+    val diyalogHaritasi = mapOf(
         "baslangic" to DiyalogDurumu(
             metin = "Karakol: Dedektif, bu vakada iki şüpheli var. Hangisiyle konuşmak istersin?",
             secenekler = listOf(
@@ -45,125 +52,80 @@ class MainActivity : AppCompatActivity() {
         "supheli_b_gidis" to DiyalogDurumu(
             metin = "Yekta Demir: Neden buradayım? Benimle konuşmanızı gerektirecek bir şey yok.",
             secenekler = listOf(
-                DiyalogSecenegi("Tehdit et.", "tehdit_sonucu"),
+                DiyalogSecenegi(metin = "Tehdit et.", sonrakiDurumId = "tehdit_sonucu"),
                 DiyalogSecenegi("Geri çekil.", "karsilastirma")
             )
         ),
         "kanit_goster" to DiyalogDurumu(
-            metin = "Işık Aslan şok oldu ve kaçmaya çalıştı. [VAKA SONU]",
-            secenekler = null
+            "Işık Aslan şok oldu ve kaçmaya çalıştı. [VAKA SONU]",
+            null
         ),
         "karsilastirma" to DiyalogDurumu(
             metin = "Dedektif: Kanıtları karşılaştırmalıyım. [ANA EKRAN]",
             secenekler = null
         ),
         "tehdit_sonucu" to DiyalogDurumu(
-            metin = "Yekta Demir gülümsedi: Güzel deneme, dedektif. [VAKA SONU]",
+            metin = "Yekta Demir gülümsedi; Güzel deneme dedektif. [VAKA SONU]",
             secenekler = null
         )
     )
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
+    val suankiDurum = diyalogHaritasi[mevcutDurumId]
 
-        val kanitAnahtar = findViewById<ImageView>(R.id.imageViewArkaPlan)
-        diyaloqKutusu = findViewById(R.id.textViewDiyalog)
-        secenek1Button = findViewById(R.id.buttonSecenek1)
-        secenek2Button = findViewById(R.id.buttonSecenek2)
-
-        val prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
-        mevcutDurumId = prefs.getString(KEY_DIYALOG_ID, "baslangic") ?: "baslangic"
-
-        kanitAnahtar.setOnClickListener {
-            kanitBulundu(kanitAnahtar, "Anahtar")
-        }
-
-        secenek1Button.setOnClickListener {
-            butonaTiklandi(secenek1Button.tag as String)
-        }
-
-        secenek2Button.setOnClickListener {
-            butonaTiklandi(secenek2Button.tag as String)
-        }
-
-        yukleKanitDurumu(kanitAnahtar)
-        yukleDiyalogDurumu(mevcutDurumId)
-    }
-
-    private fun kanitBulundu(kanitView: ImageView, kanitAdi: String) {
-        kanitView.visibility = View.INVISIBLE
-        Toast.makeText(this, "$kanitAdi bulundu!", Toast.LENGTH_SHORT).show()
-
-        val prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
-        prefs.edit().apply {
-            val kanitIdAdı = kanitView.resources.getResourceEntryName(kanitView.id)
-            putBoolean(KEY_KANIT_BULUNDU + kanitIdAdı, true)
-        }
-    }
-
-    private fun butonaTiklandi(sonrakiDurumId: String) {
-        mevcutDurumId = sonrakiDurumId
-
-        val kaydedilecekId = if (OYUN_SONU_IDLERI.contains(mevcutDurumId)) {
-            "baslangic"
-        } else {
-            mevcutDurumId
-        }
-
-        kaydetDiyalogDurumu(kaydedilecekId)
-        yukleDiyalogDurumu(mevcutDurumId)
-    }
-
-    private fun yukleDiyalogDurumu(durumId: String) {
-        val durum = diyalogHaritasi[durumId] ?: return
-        diyaloqKutusu.text = durum.metin
-
-        if (durum.secenekler != null && durum.secenekler.isNotEmpty()) {
-            secenek1Button.visibility = View.VISIBLE
-            secenek2Button.visibility = View.VISIBLE
-
-            val secenek1 = durum.secenekler[0]
-            secenek1Button.text = secenek1.metin
-            secenek1Button.tag = secenek1.sonrakiDurumId
-
-            if (durum.secenekler.size > 1) {
-                val secenek2 = durum.secenekler[1]
-                secenek2Button.text = secenek2.metin
-                secenek2Button.tag = secenek2.sonrakiDurumId
-            } else {
-                secenek2Button.visibility = View.GONE
+    Column(
+        modifier = Modifier.fillMaxSize().padding(20.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(300.dp)
+        ) {
+            Image(
+                painter = painterResource(id = R.drawable.olayyeri),
+                contentDescription = "Olay Yeri",
+                modifier = Modifier.fillMaxSize(),
+                contentScale = ContentScale.Crop
+            )
+            if (!kanitBulundu) {
+                Icon(
+                    painter = painterResource(id = android.R.drawable.ic_lock_idle_low_battery),
+                    contentDescription = "Kanıt",
+                    modifier = Modifier
+                        .size(50.dp)
+                        .align(Alignment.BottomEnd)
+                        .offset(x = (-20).dp, y = (-20).dp)
+                        .clickable { kanitBulundu = true },
+                    tint = Color.Yellow
+                )
             }
-        } else {
-            secenek1Button.visibility = View.GONE
-            secenek2Button.visibility = View.GONE
         }
-    }
 
-    private fun yukleKanitDurumu(kanitView: ImageView) {
-        val prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
-        val kanitAdi = kanitView.resources.getResourceEntryName(kanitView.id)
-        val bulundu = prefs.getBoolean(KEY_KANIT_BULUNDU + kanitAdi, false)
+        Spacer(modifier = Modifier.height(30.dp))
 
-        if (bulundu) {
-            kanitView.visibility = View.INVISIBLE
+        Text(
+            text = suankiDurum?.metin ?: "Hata: Durum bulunamadı",
+            fontSize = 18.sp,
+            modifier = Modifier.padding(bottom = 20.dp)
+        )
+
+        suankiDurum?.secenekler?.forEach { secenek ->
+            Button(
+                onClick = { mevcutDurumId = secenek.sonrakiDurumId },
+                modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)
+            ) {
+                Text(secenek.metin)
+            }
         }
-    }
 
-    private fun kaydetDiyalogDurumu(durumId: String) {
-        val prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
-        prefs.edit()
-            .putString(KEY_DIYALOG_ID, durumId)
-            .commit()
+        if (suankiDurum?.secenekler == null) {
+            Button(onClick = { mevcutDurumId = "baslangic" }) {
+                Text("Başa Dön")
+            }
+        }
     }
 }
 
-data class DiyalogDurumu(
-    val metin: String,
-    val secenekler: List<DiyalogSecenegi>? = null
-)
-
-data class DiyalogSecenegi(
-    val metin: String,
-    val sonrakiDurumId: String
-)
+data class DiyalogDurumu(val metin: String, val secenekler: List<DiyalogSecenegi>?)
+data class DiyalogSecenegi(val metin: String, val sonrakiDurumId: String)
