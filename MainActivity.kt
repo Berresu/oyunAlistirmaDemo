@@ -1,6 +1,7 @@
 package com.example.ilkuygulamam
 
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.Image
@@ -12,6 +13,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -31,6 +33,8 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun OyunEkrani() {
+    val context = LocalContext.current
+
     var mevcutDurumId by remember { mutableStateOf("baslangic") }
     var kanitBulundu by remember { mutableStateOf(false) }
 
@@ -84,21 +88,28 @@ fun OyunEkrani() {
         ) {
             Image(
                 painter = painterResource(id = R.drawable.olayyeri),
-                contentDescription = "Olay Yeri",
+                contentDescription = null,
                 modifier = Modifier.fillMaxSize(),
                 contentScale = ContentScale.Crop
             )
+
             if (!kanitBulundu) {
-                Icon(
-                    painter = painterResource(id = android.R.drawable.ic_lock_idle_low_battery),
-                    contentDescription = "Kanıt",
+                Box(
                     modifier = Modifier
-                        .size(50.dp)
-                        .align(Alignment.BottomEnd)
-                        .offset(x = (-20).dp, y = (-20).dp)
-                        .clickable { kanitBulundu = true },
-                    tint = Color.Yellow
-                )
+                        .size(80.dp)
+                        .align(Alignment.Center)
+                        .clickable {
+                            kanitBulundu = true
+
+                            Toast.makeText(context, "Kanıt Bulundu!", Toast.LENGTH_SHORT).show()
+                        }
+                ) {
+                    Icon(
+                        painter = painterResource(id = android.R.drawable.ic_search_category_default),
+                        contentDescription = null,
+                        tint = Color.Red.copy(alpha = 0.5f)
+                    )
+                }
             }
         }
 
