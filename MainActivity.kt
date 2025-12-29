@@ -23,6 +23,8 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.launch
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -89,95 +91,104 @@ fun OyunEkrani() {
         drawerState = drawerState,
         drawerContent = {
             ModalDrawerSheet {
-                Text("DAVA DOSYASI", modifier = Modifier.padding(16.dp), style = MaterialTheme.typography.headlineSmall)
+                val scrollState = rememberScrollState()
 
-                Text("Şüpheliler", modifier = Modifier.padding(start = 16.dp, top = 8.dp), style = MaterialTheme.typography.labelMedium)
-                NavigationDrawerItem(
-                    label = {Text("İlhan Dönmez")},
-                    icon = {Icon(Icons.Default.Person, contentDescription = null)},
-                    selected = false,
-                    onClick = {
-                        Toast.makeText(context, "İlhan Dönmez seçildi", Toast.LENGTH_SHORT).show()
-                    }
-                )
+                Column(
+                    modifier = Modifier
+                        .verticalScroll(scrollState)
+                        .padding(bottom = 16.dp)
+                ) {
+                    Text("DAVA DOSYASI", modifier = Modifier.padding(16.dp), style = MaterialTheme.typography.headlineSmall)
 
-                NavigationDrawerItem(
-                    label = {Text("Selin Solmaz")},
-                    icon = {Icon(Icons.Default.Person, contentDescription = null)},
-                    selected = false,
-                    onClick = {
-                        Toast.makeText(context, "Selin Solmaz seçildi", Toast.LENGTH_SHORT).show()
-                    }
-                )
+                    Text("Şüpheliler", modifier = Modifier.padding(start = 16.dp, top = 8.dp), style = MaterialTheme.typography.labelMedium)
+                    NavigationDrawerItem(
+                        label = {Text("İlhan Dönmez")},
+                        icon = {Icon(Icons.Default.Person, contentDescription = null)},
+                        selected = false,
+                        onClick = {
+                            Toast.makeText(context, "İlhan Dönmez seçildi", Toast.LENGTH_SHORT).show()
+                        }
+                    )
 
-                NavigationDrawerItem(
-                    label = {Text("Petridon Koral")},
-                    icon = {Icon(Icons.Default.Person, contentDescription = null)},
-                    selected = false,
-                    onClick = {
-                        Toast.makeText(context, "Petridon Koral seçildi", Toast.LENGTH_SHORT).show()
-                    }
-                )
+                    NavigationDrawerItem(
+                        label = {Text("Selin Solmaz")},
+                        icon = {Icon(Icons.Default.Person, contentDescription = null)},
+                        selected = false,
+                        onClick = {
+                            Toast.makeText(context, "Selin Solmaz seçildi", Toast.LENGTH_SHORT).show()
+                        }
+                    )
 
-                NavigationDrawerItem(
-                    label = {Text("Duru Arısoy")},
-                    icon = {Icon(Icons.Default.Person, contentDescription = null)},
-                    selected = false,
-                    onClick = {
-                        Toast.makeText(context, "Duru Arısoy seçildi", Toast.LENGTH_SHORT).show()
-                    }
-                )
+                    NavigationDrawerItem(
+                        label = {Text("Petridon Koral")},
+                        icon = {Icon(Icons.Default.Person, contentDescription = null)},
+                        selected = false,
+                        onClick = {
+                            Toast.makeText(context, "Petridon Koral seçildi", Toast.LENGTH_SHORT).show()
+                        }
+                    )
 
-                NavigationDrawerItem(
-                    label = {Text("Celal Baltacı")},
-                    icon = {Icon(Icons.Default.Person, contentDescription = null)},
-                    selected = false,
-                    onClick = {
-                        Toast.makeText(context, "Celal Baltacı seçildi", Toast.LENGTH_SHORT).show()
-                    }
-                )
+                    NavigationDrawerItem(
+                        label = {Text("Duru Arısoy")},
+                        icon = {Icon(Icons.Default.Person, contentDescription = null)},
+                        selected = false,
+                        onClick = {
+                            Toast.makeText(context, "Duru Arısoy seçildi", Toast.LENGTH_SHORT).show()
+                        }
+                    )
 
-                NavigationDrawerItem(
-                    label = {Text("Işık Aslan")},
-                    icon = {Icon(Icons.Default.Person, contentDescription = null)},
-                    selected = false,
-                    onClick = {
-                        Toast.makeText(context, "Işık Aslan seçildi", Toast.LENGTH_SHORT).show()
-                    }
-                )
+                    NavigationDrawerItem(
+                        label = {Text("Celal Baltacı")},
+                        icon = {Icon(Icons.Default.Person, contentDescription = null)},
+                        selected = false,
+                        onClick = {
+                            Toast.makeText(context, "Celal Baltacı seçildi", Toast.LENGTH_SHORT).show()
+                        }
+                    )
 
-                NavigationDrawerItem(
-                    label = {Text("Yekta Demir")},
-                    icon = {Icon(Icons.Default.Person, contentDescription = null)},
-                    selected = false,
-                    onClick = {
-                        Toast.makeText(context, "Yekta Demir seçildi", Toast.LENGTH_SHORT).show()
-                    }
-                )
+                    NavigationDrawerItem(
+                        label = {Text("Işık Aslan")},
+                        icon = {Icon(Icons.Default.Person, contentDescription = null)},
+                        selected = false,
+                        onClick = {
+                            Toast.makeText(context, "Işık Aslan seçildi", Toast.LENGTH_SHORT).show()
+                        }
+                    )
 
-                HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+                    NavigationDrawerItem(
+                        label = {Text("Yekta Demir")},
+                        icon = {Icon(Icons.Default.Person, contentDescription = null)},
+                        selected = false,
+                        onClick = {
+                            Toast.makeText(context, "Yekta Demir seçildi", Toast.LENGTH_SHORT).show()
+                        }
+                    )
 
-                Text("Olay Yeri Bilgileri", modifier = Modifier.padding(start = 16.dp), style = MaterialTheme.typography.labelMedium)
-                NavigationDrawerItem(
-                    label = {Text("Yerebatan Sarnıcı")},
-                    icon = {Icon(Icons.Default.Place, contentDescription = null)},
-                    selected = false,
-                    onClick = {
-                        Toast.makeText(context, "Yerebatan Sarnıcı seçildi", Toast.LENGTH_SHORT).show()
-                    }
-                )
+                    HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
 
-                Spacer(Modifier.weight(1f))
+                    Text("Olay Yeri Bilgileri", modifier = Modifier.padding(start = 16.dp), style = MaterialTheme.typography.labelMedium)
+                    NavigationDrawerItem(
+                        label = {Text("Yerebatan Sarnıcı")},
+                        icon = {Icon(Icons.Default.Place, contentDescription = null)},
+                        selected = false,
+                        onClick = {
+                            Toast.makeText(context, "Yerebatan Sarnıcı seçildi", Toast.LENGTH_SHORT).show()
+                        }
+                    )
 
-                HorizontalDivider()
-                NavigationDrawerItem(
-                    label = {Text("Ayarlar")},
-                    icon = {Icon(Icons.Default.Settings, contentDescription = null)},
-                    selected = false,
-                    onClick = {
-                        Toast.makeText(context, "Ayarlar seçildi", Toast.LENGTH_SHORT).show()
-                    }
-                )
+                    Spacer(Modifier.height(20.dp))
+
+                    HorizontalDivider()
+                    NavigationDrawerItem(
+                        label = {Text("Ayarlar")},
+                        icon = {Icon(Icons.Default.Settings, contentDescription = null)},
+                        selected = false,
+                        onClick = {
+                            Toast.makeText(context, "Ayarlar seçildi", Toast.LENGTH_SHORT).show()
+                        }
+                    )
+                }
+
             }
         }
     ) {
