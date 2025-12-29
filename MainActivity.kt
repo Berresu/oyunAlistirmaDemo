@@ -4,27 +4,31 @@ import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Menu
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Place
-import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.launch
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
+
+// Veri Modelleri
+data class DiyalogDurumu(val metin: String, val secenekler: List<DiyalogSecenegi>?)
+data class DiyalogSecenegi(val metin: String, val sonrakiDurumId: String)
+data class CarouselItem(val id: String, val baslik: String, val aciklama: String)
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -39,50 +43,55 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
-fun OyunEkrani() {
+fun OyunEkrani(){
     val context = LocalContext.current
-    val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
+    val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
 
     var mevcutDurumId by remember { mutableStateOf("baslangic") }
     var kanitBulundu by remember { mutableStateOf(false) }
 
+    val carouselSecenekleri = listOf(
+        CarouselItem("sorgula", "Şüphelileri Sorgula", "Karakoldaki şüphelilerle konuşarak ipucu topla."),
+        CarouselItem("incele", "Olay Yerini İncele", "Yerebatan Sarnıcı'ndaki gizli kanıtları ara.")
+    )
+    val pagerState = rememberPagerState(pageCount = {carouselSecenekleri.size})
+
     val diyalogHaritasi = mapOf(
-        "baslangic" to DiyalogDurumu(
-            metin = "Karakol: Dedektif, bu vakada iki şüpheli var. Hangisiyle konuşmak istersin?",
-            secenekler = listOf(
-                DiyalogSecenegi("Işık Aslan ile konuş.", "supheli_a_gidis"),
-                DiyalogSecenegi("Yekta Demir ile konuş.", "supheli_b_gidis")
-            )
-        ),
-        "supheli_a_gidis" to DiyalogDurumu(
-            metin = "Işık Aslan: Ben suçsuzum. Kanıtlarınız ne diyor?",
-            secenekler = listOf(
-                DiyalogSecenegi("Kanıtı göster.", "kanit_goster"),
-                DiyalogSecenegi("Geri çekil.", "karsilastirma")
-            )
-        ),
-        "supheli_b_gidis" to DiyalogDurumu(
-            metin = "Yekta Demir: Neden buradayım? Benimle konuşmanızı gerektirecek bir şey yok.",
-            secenekler = listOf(
-                DiyalogSecenegi(metin = "Tehdit et.", sonrakiDurumId = "tehdit_sonucu"),
-                DiyalogSecenegi("Geri çekil.", "karsilastirma")
-            )
-        ),
-        "kanit_goster" to DiyalogDurumu(
-            "Işık Aslan şok oldu ve kaçmaya çalıştı. [VAKA SONU]",
-            null
-        ),
-        "karsilastirma" to DiyalogDurumu(
-            metin = "Dedektif: Kanıtları karşılaştırmalıyım. [ANA EKRAN]",
-            secenekler = null
-        ),
-        "tehdit_sonucu" to DiyalogDurumu(
-            metin = "Yekta Demir gülümsedi; Güzel deneme dedektif. [VAKA SONU]",
-            secenekler = null
-        )
+        "baslangic" to DiyalogDurumu("İstanbul Emniyet Müdürlüğüne hoş geldin. İlk adımın ne olacak?", null),
+        "sorgu_ekrani" to DiyalogDurumu("Sorgu Odası: Karşında Işık Aslan, Yekta Demir ve Duru Arısoy var.", listOf(
+            DiyalogSecenegi("Işık Aslan ile konuş.", "isik_konusma"),
+            DiyalogSecenegi("Yekta Demir ile konuş.", "yekta_konusma"),
+            DiyalogSecenegi("Duru Arısoy ile konuş.", "duru_konusma")
+        )),
+        "isik_konusma" to DiyalogDurumu("Işık Aslan: Petridon'un bana yüklü miktarda borcu vardı bu sebeple biraz tartıştık ama onu bu sebepten öldürmezdim.", listOf(
+            DiyalogSecenegi("Neden bu sebepten öldürmezdin?","isik_son"),
+            DiyalogSecenegi("Geri Çekil", "baslangic")
+        )),
+        "isik_son" to DiyalogDurumu("Işık Aslan: Çünkü onu öldürürsem paramı geri alamazdım.", secenekler = listOf(
+            DiyalogSecenegi("Diğer Şüphelileri Sorgula", "baslangic")
+        )),
+        "yekta_konusma" to DiyalogDurumu("Yekta Demir: Evet Petridonla kavga ettim ama onu ben öldürmedim.", secenekler = listOf(
+            DiyalogSecenegi("Peki neden kavga ettiniz?", "yekta_son"),
+            DiyalogSecenegi("Geri Çekil", "baslangic")
+        )),
+        "yekta_son" to DiyalogDurumu("Yekta Demir: Kitap-Kafemdeki kadın müşterileri rahatsız ettiği için kavga ettik.", secenekler = listOf(
+            DiyalogSecenegi("Diğer Şüphelileri Sorgula", "baslangic")
+        )),
+        "duru_konusma" to DiyalogDurumu("Duru Arısoy: Evet Petridon'u ben öldürdüm.", secenekler = listOf(
+            DiyalogSecenegi("Neden?", "duru_son"),
+            DiyalogSecenegi("Duru Arısoy'u Tutukla", "vaka_son")
+        )),
+        "duru_son" to DiyalogDurumu("Duru Arısoy: Petridon beni uzun süredir rahatsız ediyordu. Defalarca durmasını istedim ama dinlemedi.\n" +
+                "Petridon'un hareketlerini Denizlerin Tanrısı Poseidon'un Medusa'ya yaptıklarına benzettiğim\n" +
+                "için asıl cezalandırılması gereken kişinin Medusa gibi kurbanlar olmasındansa Poseidon gibi\n" +
+                "pislikler olduğunu insanlara anlatabilmek için Petridon'u Yerebatan Sarnıcı'nda, Medusa'nın\n" +
+                "öldürüldüğü gibi boynunu, Medusa Başı Heykeli'nin önünde kestim.", secenekler = listOf(
+            DiyalogSecenegi("Duru Arısoy'u Tutukla", "vaka_son")
+                )),
+        "vaka_son" to DiyalogDurumu("Dosya Kapandı. Suçlu yakalandı... Ama gerçek adalet bu mu?", null)
     )
 
     val suankiDurum = diyalogHaritasi[mevcutDurumId]
@@ -91,181 +100,133 @@ fun OyunEkrani() {
         drawerState = drawerState,
         drawerContent = {
             ModalDrawerSheet {
-                val scrollState = rememberScrollState()
-
                 Column(
                     modifier = Modifier
-                        .verticalScroll(scrollState)
-                        .padding(bottom = 16.dp)
+                        .fillMaxHeight()
+                        .verticalScroll(rememberScrollState())
+                        .padding(16.dp)
                 ) {
-                    Text("DAVA DOSYASI", modifier = Modifier.padding(16.dp), style = MaterialTheme.typography.headlineSmall)
-
-                    Text("Şüpheliler", modifier = Modifier.padding(start = 16.dp, top = 8.dp), style = MaterialTheme.typography.labelMedium)
-                    NavigationDrawerItem(
-                        label = {Text("İlhan Dönmez")},
-                        icon = {Icon(Icons.Default.Person, contentDescription = null)},
-                        selected = false,
-                        onClick = {
-                            Toast.makeText(context, "İlhan Dönmez seçildi", Toast.LENGTH_SHORT).show()
-                        }
-                    )
-
-                    NavigationDrawerItem(
-                        label = {Text("Selin Solmaz")},
-                        icon = {Icon(Icons.Default.Person, contentDescription = null)},
-                        selected = false,
-                        onClick = {
-                            Toast.makeText(context, "Selin Solmaz seçildi", Toast.LENGTH_SHORT).show()
-                        }
-                    )
-
-                    NavigationDrawerItem(
-                        label = {Text("Petridon Koral")},
-                        icon = {Icon(Icons.Default.Person, contentDescription = null)},
-                        selected = false,
-                        onClick = {
-                            Toast.makeText(context, "Petridon Koral seçildi", Toast.LENGTH_SHORT).show()
-                        }
-                    )
-
-                    NavigationDrawerItem(
-                        label = {Text("Duru Arısoy")},
-                        icon = {Icon(Icons.Default.Person, contentDescription = null)},
-                        selected = false,
-                        onClick = {
-                            Toast.makeText(context, "Duru Arısoy seçildi", Toast.LENGTH_SHORT).show()
-                        }
-                    )
-
-                    NavigationDrawerItem(
-                        label = {Text("Celal Baltacı")},
-                        icon = {Icon(Icons.Default.Person, contentDescription = null)},
-                        selected = false,
-                        onClick = {
-                            Toast.makeText(context, "Celal Baltacı seçildi", Toast.LENGTH_SHORT).show()
-                        }
-                    )
-
-                    NavigationDrawerItem(
-                        label = {Text("Işık Aslan")},
-                        icon = {Icon(Icons.Default.Person, contentDescription = null)},
-                        selected = false,
-                        onClick = {
-                            Toast.makeText(context, "Işık Aslan seçildi", Toast.LENGTH_SHORT).show()
-                        }
-                    )
-
-                    NavigationDrawerItem(
-                        label = {Text("Yekta Demir")},
-                        icon = {Icon(Icons.Default.Person, contentDescription = null)},
-                        selected = false,
-                        onClick = {
-                            Toast.makeText(context, "Yekta Demir seçildi", Toast.LENGTH_SHORT).show()
-                        }
-                    )
-
-                    HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
-
-                    Text("Olay Yeri Bilgileri", modifier = Modifier.padding(start = 16.dp), style = MaterialTheme.typography.labelMedium)
-                    NavigationDrawerItem(
-                        label = {Text("Yerebatan Sarnıcı")},
-                        icon = {Icon(Icons.Default.Place, contentDescription = null)},
-                        selected = false,
-                        onClick = {
-                            Toast.makeText(context, "Yerebatan Sarnıcı seçildi", Toast.LENGTH_SHORT).show()
-                        }
-                    )
-
+                    Text("DAVA DOSYASI", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
                     Spacer(Modifier.height(20.dp))
 
-                    HorizontalDivider()
+                    Text("Şüpheliler", style = MaterialTheme.typography.labelLarge, color = Color.Gray)
+                    val supheliler = listOf("İlhan Dönmez", "Selin Solmaz", "Duru Arısoy", "Petridon Koral", "Celal Baltacı", "Işık Aslan", "Yekta Demir")
+                    supheliler.forEach{ isim ->
+                        NavigationDrawerItem(
+                            label = {Text(isim)},
+                            selected = false,
+                            icon = {Icon(Icons.Default.Person, contentDescription = null)},
+                            onClick = { Toast.makeText(context, isim, Toast.LENGTH_SHORT).show()}
+                        )
+                    }
+
+                    HorizontalDivider(modifier = Modifier.padding(vertical = 16.dp))
+
+                    Text("Cinayet Mahalleri", style = MaterialTheme.typography.labelLarge, color = Color.Gray)
+                    NavigationDrawerItem(
+                        label = {Text("Yerebatan Sarnıcı")},
+                        selected = false,
+                        icon = {Icon(Icons.Default.Place, contentDescription = null)},
+                        onClick = { Toast.makeText(context, "Yerebatan Sarnıcı", Toast.LENGTH_SHORT).show()}
+                    )
+
+                    Spacer(Modifier.height(40.dp))
                     NavigationDrawerItem(
                         label = {Text("Ayarlar")},
-                        icon = {Icon(Icons.Default.Settings, contentDescription = null)},
                         selected = false,
-                        onClick = {
-                            Toast.makeText(context, "Ayarlar seçildi", Toast.LENGTH_SHORT).show()
-                        }
+                        icon = {Icon(Icons.Default.Settings, contentDescription = null)},
+                        onClick = {}
                     )
                 }
-
             }
         }
     ) {
         Scaffold(
             topBar = {
-                TopAppBar(
-                    title = { Text("Dedektif Oyunu") },
+                CenterAlignedTopAppBar(
+                    title = {Text("DOSYA NO: 34", fontWeight = FontWeight.ExtraBold, fontSize = 20.sp)},
                     navigationIcon = {
-                        IconButton(onClick = { scope.launch { drawerState.open() } }) {
-                            Icon(Icons.Default.Menu, contentDescription = "Dosyayı Aç")
+                        IconButton(onClick = {scope.launch { drawerState.open() }}) {
+                            Icon(Icons.Default.Menu, "Menü")
                         }
                     }
                 )
             }
-        ) { paddingValues ->
+        ) {padding ->
             Column(
-                modifier = Modifier.fillMaxSize().padding(paddingValues).padding(20.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding)
+                    .background(Color(0xFF121212)),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(300.dp)
-                ) {
+                Box(modifier = Modifier.fillMaxWidth().height(250.dp).padding(16.dp).clip(RoundedCornerShape(16.dp))){
                     Image(
-                        painter = painterResource(id = R.drawable.olayyeri),
+                        painter = painterResource(id = com.example.ilkuygulamam.R.drawable.olayyeri),
                         contentDescription = null,
                         modifier = Modifier.fillMaxSize(),
                         contentScale = ContentScale.Crop
                     )
-
-                    if (!kanitBulundu) {
-                        Box(
-                            modifier = Modifier
-                                .size(80.dp)
-                                .align(Alignment.Center)
-                                .clickable {
-                                    kanitBulundu = true
-                                    Toast.makeText(context, "Kanıt Bulundu!", Toast.LENGTH_SHORT).show()
-                                }
+                    if (!kanitBulundu){
+                        IconButton(
+                            onClick = {
+                                kanitBulundu = true
+                                Toast.makeText(context, "Kanıt Bulundu!", Toast.LENGTH_SHORT).show()
+                            },
+                            modifier = Modifier.align(Alignment.Center).size(60.dp)
                         ) {
-                            Icon(
-                                painter = painterResource(id = android.R.drawable.ic_search_category_default),
-                                contentDescription = null,
-                                tint = Color.Red.copy(alpha = 0.5f)
-                            )
+                            Icon(Icons.Default.Search, null, tint = Color.Red.copy(alpha = 0.7f), modifier = Modifier.size(40.dp))
                         }
                     }
                 }
 
-                Spacer(modifier = Modifier.height(30.dp))
-
                 Text(
-                    text = suankiDurum?.metin ?: "Hata: Durum bulunamadı",
+                    text = suankiDurum?.metin ?: "",
+                    color = Color.White,
+                    modifier = Modifier.padding(24.dp),
                     fontSize = 18.sp,
-                    modifier = Modifier.padding(bottom = 20.dp)
+                    lineHeight = 24.sp
                 )
 
-                suankiDurum?.secenekler?.forEach { secenek ->
-                    Button(
-                        onClick = { mevcutDurumId = secenek.sonrakiDurumId },
-                        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)
-                    ) {
-                        Text(secenek.metin)
+                if (mevcutDurumId == "baslangic"){
+                    HorizontalPager(
+                        state = pagerState,
+                        modifier = Modifier.fillMaxWidth().height(150.dp),
+                        contentPadding = PaddingValues(horizontal = 48.dp),
+                        pageSpacing = 16.dp
+                    ) { sayfa ->
+                        val item = carouselSecenekleri[sayfa]
+                        Card(
+                            onClick = {
+                                if (item.id == "sorgula") mevcutDurumId = "sorgu_ekrani"
+                                else Toast.makeText(context, "İnceleme Modu Aktif!", Toast.LENGTH_SHORT).show()
+                            },
+                            colors = CardDefaults.cardColors(containerColor = Color(0xFF212121)),
+                            border = BorderStroke(1.dp, Color.Cyan)
+                        ){
+                            Column(Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.Center) {
+                                Text(item.baslik, fontWeight = FontWeight.Bold, color = Color.Cyan)
+                                Text(item.aciklama, fontSize = 12.sp, color = Color.LightGray)
+                            }
+                        }
                     }
-                }
-
-                if (suankiDurum?.secenekler == null) {
-                    Button(onClick = { mevcutDurumId = "baslangic" }) {
-                        Text("Başa Dön")
+                } else{
+                    suankiDurum?.secenekler?.forEach { secenek ->
+                        Button(
+                            onClick = {mevcutDurumId = secenek.sonrakiDurumId},
+                            modifier = Modifier.fillMaxWidth().padding(horizontal = 32.dp, vertical = 4.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = Color.DarkGray)
+                        ) {
+                            Text(secenek.metin)
+                        }
+                    }
+                    if (suankiDurum?.secenekler == null){
+                        TextButton(onClick = {mevcutDurumId="baslangic"}) {
+                            Text("Yeniden Başla", color = Color.Cyan)
+                        }
                     }
                 }
             }
         }
     }
 }
-
-data class DiyalogDurumu(val metin: String, val secenekler: List<DiyalogSecenegi>?)
-data class DiyalogSecenegi(val metin: String, val sonrakiDurumId: String)
